@@ -43,7 +43,7 @@ jobs:
       - name: Upload static files
         uses: actions/upload-pages-artifact@v3
         with:
-          path: frontend/dist  # Adjust i your build folder is named differently
+          path: frontend/dist  # Adjust if your build folder is named differently
 
   deploy:
     needs: build
