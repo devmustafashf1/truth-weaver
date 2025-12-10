@@ -1,0 +1,53 @@
+name: Deploy Frontend to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1️⃣ Checkout repo
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Node
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # 3️⃣ Move into frontend folder & install dependencies
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
+
+      # 4️⃣ Build frontend
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+      # 5️⃣ Upload build folder for GitHub Pages
+      - name: Upload static files
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist  # Adjust if your build folder is named differently
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
