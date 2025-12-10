@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Frontend to GitHub Pages
 
 on:
   push:
@@ -17,25 +17,33 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      # 1️⃣ Checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      # 2️⃣ Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Install Dependencies
-        run: npm install
+      # 3️⃣ Move into frontend folder & install dependencies
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
 
-      - name: Build App
-        run: npm run build
+      # 4️⃣ Build frontend
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
 
-      # IMPORTANT: now using latest v3 (internal v4)
+      # 5️⃣ Upload build folder for GitHub Pages
       - name: Upload static files
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: frontend/dist  # Adjust if your build folder is named differently
 
   deploy:
     needs: build
