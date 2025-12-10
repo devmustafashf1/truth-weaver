@@ -25,25 +25,21 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm install
 
-      - name: Build project
+      - name: Build App
         run: npm run build
 
-      # NEW: updated artifact action (not deprecated)
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+      # IMPORTANT: now using latest v3 (internal v4)
+      - name: Upload static files
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
-        id: deployment
         uses: actions/deploy-pages@v4
