@@ -6,44 +6,27 @@ import AnalysisResult from "@/components/AnalysisResult";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import Features from "@/components/Features";
 
-// Mock analysis function - in production this would call your OpenAI + RAG backend
-const mockAnalyze = async (text: string) => {
-  await new Promise((resolve) => setTimeout(resolve, 6000));
-  
-  // Simulate different results based on content
-  const isSuspicious = text.toLowerCase().includes("shocking") || 
-                       text.toLowerCase().includes("you won't believe") ||
-                       text.toLowerCase().includes("secret");
-  
-  return {
-    verdict: isSuspicious ? "likely_fake" : "likely_real" as "likely_fake" | "likely_real" | "uncertain",
-    confidence: isSuspicious ? 78 : 92,
-    summary: isSuspicious 
-      ? "Multiple claims in this article could not be verified against trusted sources. Language patterns suggest sensationalism."
-      : "The primary claims in this article are consistent with verified reporting from multiple credible sources.",
-    claims: [
-      {
-        text: "Primary claim about the main event",
-        status: isSuspicious ? "false" : "verified" as "verified" | "false" | "unverified",
-        source: "Associated Press, Reuters",
-      },
-      {
-        text: "Statistical data mentioned in the article",
-        status: "verified" as "verified" | "false" | "unverified",
-        source: "Official government records",
-      },
-      {
-        text: "Quote attributed to official spokesperson",
-        status: "unverified" as "verified" | "false" | "unverified",
-      },
-    ],
-    sources: [
-      "Associated Press - Primary Source",
-      "Reuters Fact Check Database",
-      "PolitiFact Archives",
-      "Snopes Verification Network",
-    ],
-  };
+// Call backend API for analysis
+const apiAnalyze = async (text: string) => {
+  const API_URL = import.meta.env?.VITE_API_URL || "http://localhost:5000/api/verify-news";
+
+  const resp = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`API error: ${resp.status} - ${body}`);
+  }
+
+  const json = await resp.json();
+
+  // Server returns { result: { ... } }
+  return json.result ?? json;
 };
 
 const Index = () => {
@@ -54,13 +37,21 @@ const Index = () => {
   const handleAnalyze = async (text: string) => {
     setIsLoading(true);
     setShowResult(false);
-    
+
     try {
-      const analysisResult = await mockAnalyze(text);
+      const analysisResult = await apiAnalyze(text);
       setResult(analysisResult);
       setShowResult(true);
     } catch (error) {
       console.error("Analysis failed:", error);
+      setResult({
+        verdict: "uncertain",
+        confidence: 0,
+        summary: "Failed to analyze. See console for details.",
+        claims: [],
+        sources: [],
+      });
+      setShowResult(true);
     } finally {
       setIsLoading(false);
     }
